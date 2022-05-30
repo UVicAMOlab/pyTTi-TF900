@@ -1,6 +1,7 @@
+from tracemalloc import start
 import numpy as np
 import matplotlib.pyplot as plt
-#import serial
+import serial
 import time
 import pandas as pde
 
@@ -8,10 +9,12 @@ FILENAME = time.strftime("%Y-%m-%d-%H%M.%Ss")
 
 def get_freq(collection_period : int):
     """Gets the frequency and calls other helper function for plotting or logging the data
+
     Args:
         collection_period (int): How long the function will collect data for in seconds
         log_or_plot (bool): If given true the function will log the data in a csv,
         if given false the function will plot it on a graph and not log it
+
     Returns:
         int: acquired data points
     """
@@ -21,33 +24,33 @@ def get_freq(collection_period : int):
     time_collected = []
     df_list = []
     collection_time = cur_time + collection_period
-    #s = serial.Serial("COM1" ,baudrate = 115200, stopbits = serial.STOPBITS_ONE , timeout = 1,parity=serial.PARITY_NONE, rtscts=True, dsrdtr = True)
-    #s.flushInput()
-    #s.flushOutput()
-    #s.write(b'E?\n\r')
+    s = serial.Serial("COM1" ,baudrate = 115200, stopbits = serial.STOPBITS_ONE , timeout = 1,parity=serial.PARITY_NONE, rtscts=True, dsrdtr = True)
+    s.flushInput()
+    s.flushOutput()
+    s.write(b'E?\n\r')
 
     while cur_time <= collection_time:
-        #byte_data = s.readline()
+        byte_data = s.readline()
             #Reads the data off the counter
         cur_time = time.time()    
-        #freq_data = byte_data.decode("utf-8")
+        freq_data = byte_data.decode("utf-8")
             #Decodes readings from bytes to a string
-        #freq_data = freq_data.replace("\r\n","")
-        #bs_10 = 10**int(freq_data[13])
-        #freq_data_fl = float(freq_data[:11]) * bs_10
-        freq_data_fl = np.random.random()
+        freq_data = freq_data.replace("\r\n","")
+        bs_10 = 10**int(freq_data[13])
+        freq_data_fl = float(freq_data[:11]) * bs_10
         data.append(freq_data_fl)
         time_col = cur_time - starting_time
         time_collected.append(time_col)
-        plt.scatter(time_col,freq_data_fl)
-        plt.plot(time_col, freq_data_fl,linestyle = "solid")
+        plt.clf()
+        plt.plot(time_collected,data)
         plt.pause(0.05)
-        #s.write(b'N?\n\r')
-            #Skips to the next reading  
+        s.write(b'N?\n\r')
+            #Skips to the next reading
+    plt.show()
     df_list.append(data)
     df_list.append(time_collected)
     dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
     dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
-    #s.write(b'STOP\n\r') 
-plt.show
-get_freq(5)
+    s.write(b'STOP\n\r') 
+    print("done")
+get_freq(10)
