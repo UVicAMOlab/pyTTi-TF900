@@ -43,8 +43,8 @@ def get_freq(collection_period : int):
             #Skips to the next reading  
     df_list.append(data)
     df_list.append(time_collected)
-    dbf = pde.DataFrame(df_list, index = ["Frequency","Time"]).T
+    dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
     dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
     s.write(b'STOP\n\r') 
 
-get_freq(30)
+get_freq(5)
