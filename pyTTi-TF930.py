@@ -17,39 +17,56 @@ def get_freq(collection_period : int):
     Returns:
         int: acquired data points
     """
-    cur_time = time.time() # Takes the time
-    starting_time = cur_time
-    data = []
-    time_collected = []
-    df_list = []
-    collection_time = cur_time + collection_period
-    s = serial.Serial("COM1" ,baudrate = 115200, stopbits = serial.STOPBITS_ONE , timeout = 1,parity=serial.PARITY_NONE, rtscts=True, dsrdtr = True)
-    s.flushInput()
-    s.flushOutput()
-    s.write(b'E?\n\r')
+    try:
+        cur_time = time.time() # Takes the time
+        starting_time = cur_time
+        data = []
+        time_collected = []
+        df_list = []
+        collection_time = cur_time + collection_period
+        s = serial.Serial("COM1" ,baudrate = 115200, stopbits = serial.STOPBITS_ONE , timeout = 1,parity=serial.PARITY_NONE, rtscts=True, dsrdtr = True)
+        s.flushInput()
+        s.flushOutput()
+        s.write(b'E?\n\r')
 
-    while cur_time <= collection_time:
-        byte_data = s.readline()
-            #Reads the data off the counter
-        cur_time = time.time()    
-        freq_data = byte_data.decode("utf-8")
-            #Decodes readings from bytes to a string
-        freq_data = freq_data.replace("\r\n","")
-        bs_10 = 10**int(freq_data[13])
-        freq_data_fl = float(freq_data[:11]) * bs_10
-        data.append(freq_data_fl)
-        time_col = cur_time - starting_time
-        time_collected.append(time_col)
-        plt.clf()
-        plt.plot(time_collected,data)
-        plt.pause(0.05)
-        s.write(b'N?\n\r')
-            #Skips to the next reading
-    plt.show()
-    df_list.append(data)
-    df_list.append(time_collected)
-    dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
-    dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
-    s.write(b'STOP\n\r') 
-    print("done")
+        while cur_time <= collection_time:
+            byte_data = s.readline()
+                #Reads the data off the counter
+            cur_time = time.time()    
+            freq_data = byte_data.decode("utf-8")
+                #Decodes readings from bytes to a string
+            freq_data = freq_data.replace("\r\n","")
+            bs_10 = 10**int(freq_data[13])
+            freq_data_fl = float(freq_data[:11]) * bs_10
+            data.append(freq_data_fl)
+            time_col = cur_time - starting_time
+            time_collected.append(time_col)
+            plt.clf()
+            plt.plot(time_collected,data)
+            plt.pause(0.05)
+            s.write(b'N?\n\r')
+                #Skips to the next reading
+        plt.show()
+        df_list.append(data)
+        df_list.append(time_collected)
+        dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
+        dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
+        s.write(b'STOP\n\r') 
+        print("done with no error")
+    except serial.SerialException:
+        df_list.append(data)
+        df_list.append(time_collected)
+        dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
+        dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
+        s.write(b'STOP\n\r')
+        print("raised Serial error didn't take all data")
+    except:
+        df_list.append(data)
+        df_list.append(time_collected)
+        dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
+        dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
+        s.write(b'STOP\n\r')
+        print("Other error occured")
+
+
 get_freq(10)
