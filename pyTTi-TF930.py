@@ -25,8 +25,7 @@ def get_freq(collection_period : int):
         df_list = []
         collection_time = cur_time + collection_period
         s = serial.Serial("COM1" ,baudrate = 115200, stopbits = serial.STOPBITS_ONE , timeout = 1,parity=serial.PARITY_NONE, rtscts=True, dsrdtr = True)
-        s.flushInput()
-        s.flushOutput()
+        s.flush()
         s.write(b'E?\n\r')
 
         while cur_time <= collection_time:
@@ -41,25 +40,21 @@ def get_freq(collection_period : int):
             data.append(freq_data_fl)
             time_col = cur_time - starting_time
             time_collected.append(time_col)
-            plt.clf()
-            plt.plot(time_collected,data)
-            plt.pause(0.05)
-            s.write(b'N?\n\r')
+            #s.write(b'N?\n\r')
                 #Skips to the next reading
-        plt.show()
         df_list.append(data)
         df_list.append(time_collected)
         dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
         dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
         s.write(b'STOP\n\r') 
         print("done with no error")
-    except serial.SerialException:
+    except serial.SerialException as e:
         df_list.append(data)
         df_list.append(time_collected)
         dbf = pde.DataFrame(df_list, index = ["Frequency(Hz)","Time(s)"]).T
         dbf.to_csv("{}.csv".format(FILENAME), index = False , header = True)
         s.write(b'STOP\n\r')
-        print("raised Serial error didn't take all data")
+        print("raised Serial error didn't take all data"+ e)
     except:
         df_list.append(data)
         df_list.append(time_collected)
