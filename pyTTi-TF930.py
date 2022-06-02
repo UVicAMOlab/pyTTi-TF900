@@ -1,8 +1,5 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import serial
 import time
-import pandas as pde
 import csv
 
 FILENAME = time.strftime("%Y-%m-%d-%H%M.%Ss")
